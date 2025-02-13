@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เลือกวันที่และเวลา</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f2f7fb;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        label {
+            font-size: 16px;
+            color: #555;
+            display: block;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        input[type="datetime-local"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        input[type="datetime-local"]:focus {
+            border-color: #5a9bff;
+            background-color: #fff;
+            outline: none;
+        }
+
+        button {
+            background-color: #5a9bff;
+            color: white;
+            padding: 14px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #4e87e1;
+        }
+
+        button:active {
+            background-color: #3d70c3;
+        }
+
+        .alert {
+            color: #ff6f61;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>เลือกวันที่และเวลา</h1>
+        <label for="activityStartDateTime">เลือกวันที่และเวลาที่เริ่มกิจกรรม:</label>
+        <input type="datetime-local" id="activityStartDateTime">
+        <br>
+        <label for="activityEndDateTime">เลือกวันที่และเวลาที่สิ้นสุดกิจกรรม:</label>
+        <input type="datetime-local" id="activityEndDateTime">
+        <br><br>
+        <button onclick="submitDateTime()">บันทึก</button>
+        <div id="errorMessage" class="alert"></div>
+    </div>
+
+    <script>
+        // ฟังก์ชันเพื่อปรับรูปแบบวันที่เป็นภาษาไทย
+        function formatDateToThai(date) {
+            const options = { year: 'numeric', day: 'numeric', month: 'long' };
+            return date.toLocaleDateString('th-TH', options);
+        }
+
+        async function submitDateTime() {
+            const startDateTime = document.getElementById('activityStartDateTime').value;
+            const endDateTime = document.getElementById('activityEndDateTime').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (!startDateTime || !endDateTime) {
+                errorMessage.textContent = "กรุณาเลือกวันที่และเวลาเริ่มต้นและสิ้นสุด!";
+                return;
+            } else {
+                errorMessage.textContent = "";
+            }
+
+            // แปลงวันที่และเวลาให้เป็นภาษาไทย
+            const startDate = new Date(startDateTime);
+            const endDate = new Date(endDateTime);
+            const startFormatted = formatDateToThai(startDate);
+            const endFormatted = formatDateToThai(endDate);
+
+            await sendToLine(startFormatted, endFormatted);
+        }
+
+        async function sendToLine(startDate, endDate) {
+            await liff.init({ liffId: "2006560575-2dxb7yQl" });
+
+            if (liff.isInClient()) {
+                const messages = [
+                    {
+                        type: "text",
+                        text: `กิจกรรมเริ่ม: ${startDate}\nกิจกรรมสิ้นสุด: ${endDate}`
+                    }
+                ];
+
+                liff.sendMessages(messages).then(() => {
+                    alert("บันทึกข้อมูลสำเร็จ! 📅");
+                    liff.closeWindow();
+                }).catch((err) => {
+                    console.error("❌ เกิดข้อผิดพลาด:", err);
+                });
+            } else {
+                alert(`เลือกวันที่เริ่มกิจกรรม: ${startDate}\nเลือกวันที่สิ้นสุดกิจกรรม: ${endDate}`);
+            }
+        }
+    </script>
+</body>
+</html>
